@@ -1,0 +1,118 @@
+package com.abc.logindemo;
+
+import androidx.appcompat.app.AppCompatActivity;
+
+import android.content.Intent;
+import android.net.wifi.p2p.WifiP2pManager;
+import android.os.Bundle;
+import android.view.View;
+import android.widget.LinearLayout;
+import android.widget.TextView;
+
+import com.android.volley.AuthFailureError;
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.Volley;
+import com.google.firebase.messaging.FirebaseMessaging;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.util.HashMap;
+import java.util.Map;
+
+public class MenuActivity extends AppCompatActivity {
+
+    private LinearLayout Notification;
+    private LinearLayout TimeTable;
+    private LinearLayout Message;
+    private LinearLayout Form;
+
+    private RequestQueue mRequestQue;
+    private String URL = "https://fcm.googleapis.com/fcm/send";
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_menu);
+
+        Notification = (LinearLayout) findViewById(R.id.LLNotification);
+        TimeTable = (LinearLayout) findViewById(R.id.LLTimeTable);
+        Message = (LinearLayout) findViewById(R.id.LLMessage);
+        Form = (LinearLayout) findViewById(R.id.LLForm);
+
+        mRequestQue = Volley.newRequestQueue(this);
+        FirebaseMessaging.getInstance().subscribeToTopic("news");
+
+        Notification.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startActivity(new Intent(MenuActivity.this, NotificationActivity.class));
+            }
+        });
+
+        TimeTable.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startActivity(new Intent(MenuActivity.this, TimeTableOptionActivity.class));
+            }
+        });
+
+        Message.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startActivity(new Intent(MenuActivity.this, MessageActivity.class));
+            }
+        });
+
+        Form.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                sendNotification();
+                //startActivity(new Intent(MenuActivity.this, FormOptionActivity.class));
+            }
+        });
+    }//ON CREATE
+
+    private void sendNotification(){
+        JSONObject mainObj = new JSONObject();
+        try {
+            mainObj.put("to","/topics/"+"news");
+            JSONObject notificationObj = new JSONObject();
+            notificationObj.put("title","any title");
+            notificationObj.put("body","any body");
+            mainObj.put("notification",notificationObj);
+
+            JsonObjectRequest request = new JsonObjectRequest(Request.Method.POST, URL,
+
+                    mainObj,
+                    new Response.Listener<JSONObject>() {
+                        @Override
+                        public void onResponse(JSONObject response) {
+
+                        }
+                    }, new Response.ErrorListener() {
+                @Override
+                public void onErrorResponse(VolleyError error) {
+
+                }
+            }
+            ){
+                @Override
+                public Map<String, String> getHeaders() throws AuthFailureError {
+                    Map<String,String> header = new HashMap<>();
+                    header.put("content-type","application/json");
+                    header.put("authorisation","key=AIzaSyDFjaekfefwydTkVDpY8GAXr0RGW1Y-tQI");
+                    return header;
+                }
+            };
+            mRequestQue.add(request);
+
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+    }
+}
